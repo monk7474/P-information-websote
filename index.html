@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Breed Information Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .upload-section, .search-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .upload-controls, .filter-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-danger {
+            background: #e53e3e;
+            color: white;
+        }
+
+        input, select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        #searchInput {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .breed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .breed-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .breed-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .breed-image {
+            height: 200px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4em;
+            position: relative;
+        }
+
+        .breed-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .breed-info {
+            padding: 20px;
+        }
+
+        .breed-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .breed-type {
+            color: #667eea;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .breed-traits {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .trait-tag {
+            background: #f0f4ff;
+            color: #667eea;
+            padding: 3px 8px;
+            border-radius: 15px;
+            font-size: 0.8em;
+        }
+
+        .breed-description {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8em;
+        }
+
+        .stat-bar {
+            width: 50px;
+            height: 4px;
+            background: #f0f0f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .stat-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .compare-btn {
+            width: 100%;
+            padding: 8px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .compare-btn.selected {
+            background: #38a169;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            margin: 20px;
+            position: relative;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .detail-traits {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .detail-trait-tag {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .behavior-tag {
+            background: #e53e3e !important;
+        }
+
+        .detail-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-stat {
+            text-align: center;
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .compare-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 500;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .compare-panel.active {
+            transform: translateY(0);
+        }
+
+        .compare-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .compare-content {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .compare-item {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .remove-compare {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #e53e3e;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .upload-status {
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .upload-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .upload-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐾 Pet Breed Information Center</h1>
+            <p class="subtitle">Discover the perfect companion for your lifestyle</p>
+        </header>
+
+        <div class="upload-section">
+            <h3 style="margin-bottom: 15px; color: #667eea;">Upload Breed Images</h3>
+            <div class="upload-controls">
+                <input type="file" id="imageUpload" accept="image/*">
+                <select id="breedSelect">
+                    <option value="">Select a breed...</option>
+                </select>
+                <button class="btn-primary" onclick="uploadImage()">Upload</button>
+                <button class="btn-danger" onclick="clearAllImages()">Clear All</button>
+            </div>
+            <div id="uploadStatus" class="upload-status"></div>
+        </div>
+
+        <div class="search-section">
+            <div class="filter-controls">
+                <input type="text" id="searchInput" placeholder="Search breeds...">
+                <select id="typeFilter">
+                    <option value="">All Types</option>
+                    <option value="Dog">Dogs</option>
+                    <option value="Cat">Cats</option>
+                </select>
+                <select id="sizeFilter">
+                    <option value="">All Sizes</option>
+                    <option value="Small">Small</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Large">Large</option>
+                </select>
+                <select id="sortFilter">
+                    <option value="">Sort By</option>
+                    <option value="name">Name (A-Z)</option>
+                    <option value="energy">Energy Level</option>
+                    <option value="affection">Affection Level</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="breedGrid" class="breed-grid"></div>
+        <div id="noResults" class="no-results">
+            <h3>No breeds found</h3>
+            <p>Try adjusting your search criteria.</p>
+        </div>
+
+        <div id="comparePanel" class="compare-panel">
+            <div class="compare-header">
+                <h3>Compare Breeds (<span id="compareCount">0</span>/3)</h3>
+                <button class="btn-danger" onclick="clearCompare()">Clear All</button>
+            </div>
+            <div id="compareContent" class="compare-content"></div>
+        </div>
+
+        <div id="breedModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button class="close-btn" onclick="closeModal()">&times;</button>
+                    <div style="font-size: 3em; margin-bottom: 10px;" id="modalEmoji">🐕</div>
+                    <div style="font-size: 2em; margin-bottom: 5px;" id="modalTitle">Breed Name</div>
+                    <div style="opacity: 0.9;" id="modalSubtitle">Dog • Size</div>
+                </div>
+                <div class="modal-body">
+                    <div class="detail-section">
+                        <h3>Personality Traits</h3>
+                        <div class="detail-traits" id="modalTraits"></div>
+                    </div>
+                    <div class="detail-section">
+                        <h3>Description</h3>
+                        <p id="modalDescription"></p>
+                    </div>
+                    <div class="detail-section">
+                        <h3>Climate Preference</h3>
+                        <p id="modalClimate"></p>
+                    </div>
+                    <div class="detail-section">
+                        <h3>Potential Issues</h3>
+                        <div class="detail-traits" id="modalIssues"></div>
+                    </div>
+                    <div class="detail-section">
+                        <h3>Characteristics</h3>
+                        <div class="detail-stats" id="modalStats"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // All breed data - 64 breeds total
+        const breeds = [
+            // Dogs (32)
+            {name: "Golden Retriever", type: "Dog", size: "Large", emoji: "🦮", image: null, traits: ["Friendly", "Intelligent", "Active"], description: "Golden Retrievers are friendly, intelligent, and devoted dogs. They make excellent family companions and working dogs.", climate: "Moderate to cool climates", issues: ["Excessive shedding", "Can be mouthy", "Needs lots of exercise"], stats: {energy: 80, trainability: 90, grooming: 75, social: 95, affection: 95, shedding: 70}},
+            {name: "Labrador Retriever", type: "Dog", size: "Large", emoji: "🦮", image: null, traits: ["Outgoing", "Active", "Friendly"], description: "Labrador Retrievers are famously friendly and outgoing. They are active companions perfect for families.", climate: "Adaptable to most climates", issues: ["Can be hyperactive", "Heavy shedding", "Prone to overeating"], stats: {energy: 90, trainability: 85, grooming: 60, social: 95, affection: 100, shedding: 80}},
+            {name: "German Shepherd", type: "Dog", size: "Large", emoji: "🐕‍🦺", image: null, traits: ["Loyal", "Intelligent", "Alert"], description: "German Shepherds are extremely versatile, serving as family companions, guard dogs, and in many other capacities.", climate: "Cool to moderate climates", issues: ["Can be overprotective", "Needs mental stimulation", "Heavy shedding"], stats: {energy: 85, trainability: 95, grooming: 80, social: 80, affection: 85, shedding: 85}},
+            {name: "French Bulldog", type: "Dog", size: "Small", emoji: "🐕", image: null, traits: ["Adaptable", "Playful", "Alert"], description: "French Bulldogs are adaptable and playful companion dogs. They are excellent apartment dogs.", climate: "Cool to moderate climates", issues: ["Breathing problems in heat", "Can be stubborn", "Prone to separation anxiety"], stats: {energy: 50, trainability: 60, grooming: 45, social: 85, affection: 90, shedding: 40}},
+            {name: "Bulldog", type: "Dog", size: "Medium", emoji: "🐕", image: null, traits: ["Gentle", "Calm", "Friendly"], description: "Bulldogs are known for their loose, wrinkled skin and distinctive pushed-in nose.", climate: "Cool climates", issues: ["Overheating easily", "Breathing difficulties", "Can be lazy"], stats: {energy: 30, trainability: 50, grooming: 50, social: 85, affection: 85, shedding: 45}},
+            {name: "Poodle", type: "Dog", size: "Medium", emoji: "🐩", image: null, traits: ["Intelligent", "Active", "Alert"], description: "Poodles are exceptional dogs renowned for their intelligence and trainability.", climate: "Adaptable to most climates", issues: ["Requires regular grooming", "Can be anxious", "Needs mental stimulation"], stats: {energy: 80, trainability: 95, grooming: 95, social: 85, affection: 80, shedding: 10}},
+            {name: "Beagle", type: "Dog", size: "Medium", emoji: "🐕", image: null, traits: ["Friendly", "Gentle", "Active"], description: "Beagles are loving, lovable, and happy dogs with appealing expressions.", climate: "Moderate climates", issues: ["Prone to howling", "Can be escape artists", "Food motivated"], stats: {energy: 75, trainability: 60, grooming: 40, social: 90, affection: 90, shedding: 60}},
+            {name: "Rottweiler", type: "Dog", size: "Large", emoji: "🐕‍🦺", image: null, traits: ["Confident", "Alert", "Loyal"], description: "Rottweilers are robust, powerful dogs with well-developed guarding instincts.", climate: "Cool to moderate climates", issues: ["Can be aggressive if not socialized", "Needs firm training", "Territorial"], stats: {energy: 70, trainability: 85, grooming: 50, social: 70, affection: 75, shedding: 70}},
+            {name: "Yorkshire Terrier", type: "Dog", size: "Small", emoji: "🐕", image: null, traits: ["Affectionate", "Energetic", "Alert"], description: "Yorkshire Terriers are compact dogs with big personalities despite their small size.", climate: "Moderate climates", issues: ["Can be yappy", "Fragile due to size", "Can be territorial"], stats: {energy: 60, trainability: 65, grooming: 90, social: 75, affection: 80, shedding: 30}},
+            {name: "Dachshund", type: "Dog", size: "Small", emoji: "🐕", image: null, traits: ["Playful", "Alert", "Loyal"], description: "Dachshunds are spunky, curious dogs with distinctive long bodies and short legs.", climate: "Moderate climates", issues: ["Back problems", "Can be stubborn", "Prone to barking"], stats: {energy: 60, trainability: 55, grooming: 40, social: 80, affection: 85, shedding: 50}},
+            {name: "Siberian Husky", type: "Dog", size: "Large", emoji: "🐕‍🦺", image: null, traits: ["Outgoing", "Energetic", "Loyal"], description: "Siberian Huskies are graceful working dogs with distinctive markings.", climate: "Cold climates", issues: ["Escape artists", "High energy needs", "Heavy shedding"], stats: {energy: 95, trainability: 60, grooming: 80, social: 85, affection: 70, shedding: 95}},
+            {name: "Great Dane", type: "Dog", size: "Large", emoji: "🐕‍🦺", image: null, traits: ["Friendly", "Patient", "Gentle"], description: "Great Danes are gentle giants with patient and dependable temperaments.", climate: "Moderate climates", issues: ["Short lifespan", "Prone to bloat", "Space requirements"], stats: {energy: 50, trainability: 70, grooming: 45, social: 90, affection: 90, shedding: 50}},
+            {name: "Boxer", type: "Dog", size: "Large", emoji: "🐕", image: null, traits: ["Playful", "Energetic", "Loyal"], description: "Boxers are fun-loving, bright, active, and loyal dogs excellent with children.", climate: "Moderate climates", issues: ["Can be hyperactive", "Prone to jumping", "Drools"], stats: {energy: 80, trainability: 75, grooming: 40, social: 90, affection: 95, shedding: 60}},
+            {name: "Boston Terrier", type: "Dog", size: "Small", emoji: "🐕", image: null, traits: ["Friendly", "Alert", "Gentle"], description: "Boston Terriers are known as the 'American Gentleman' for their tuxedo markings.", climate: "Moderate climates", issues: ["Breathing problems", "Can be gassy", "Eye injuries"], stats: {energy: 65, trainability: 80, grooming: 35, social: 90, affection: 85, shedding: 40}},
+            {name: "Shih Tzu", type: "Dog", size: "Small", emoji: "🐕", image: null, traits: ["Affectionate", "Playful", "Gentle"], description: "Shih Tzus are happy, outgoing house dogs who love following their people around.", climate: "Moderate climates", issues: ["High grooming needs", "Difficult to housebreak", "Eye problems"], stats: {energy: 50, trainability: 60, grooming: 95, social: 95, affection: 95, shedding: 20}},
+            {name: "Chihuahua", type: "Dog", size: "Small", emoji: "🐕", image: null, traits: ["Alert", "Loyal", "Energetic"], description: "Chihuahuas are tiny dogs with huge personalities and charm.", climate: "Warm climates", issues: ["Can be aggressive", "Fragile", "Excessive barking"], stats: {energy: 70, trainability: 55, grooming: 30, social: 60, affection: 90, shedding: 35}},
+            {name: "Pug", type: "Dog", size: "Small", emoji: "🐕", image: null, traits: ["Playful", "Affectionate", "Gentle"], description: "Pugs are charming, mischievous companions known for their wrinkled faces.", climate: "Moderate climates", issues: ["Breathing problems", "Weight gain", "Shedding"], stats: {energy: 50, trainability: 65, grooming: 50, social: 95, affection: 100, shedding: 70}},
+            {name: "Australian Shepherd", type: "Dog", size: "Medium", emoji: "🐕‍🦺", image: null, traits: ["Intelligent", "Energetic", "Loyal"], description: "Australian Shepherds are smart, work-oriented dogs that need a job to do.", climate: "Cool to moderate climates", issues: ["Needs mental stimulation", "Can be nippy", "High energy"], stats: {energy: 90, trainability: 95, grooming: 80, social: 80, affection: 85, shedding: 75}},
+            {name: "Cocker Spaniel", type: "Dog", size: "Medium", emoji: "🐕", image: null, traits: ["Gentle", "Friendly", "Alert"], description: "Cocker Spaniels are gentle, smart, and happy dogs with silky coats.", climate: "Moderate climates", issues: ["Ear infections", "Can be sensitive", "Grooming needs"], stats: {energy: 70, trainability: 80, grooming: 85, social: 90, affection: 90, shedding: 65}},
+            {name: "Border Collie", type: "Dog", size: "Medium", emoji: "🐕‍🦺", image: null, traits: ["Intelligent", "Energetic", "Alert"], description: "Border Collies are incredibly intelligent dogs that excel in dog sports.", climate: "Cool to moderate climates", issues: ["Obsessive behaviors", "Needs stimulation", "Can be nippy"], stats: {energy: 95, trainability: 100, grooming: 75, social: 80, affection: 80, shedding: 80}},
+            {name: "Mastiff", type: "Dog", size: "Large", emoji: "🐕‍🦺", image: null, traits: ["Gentle", "Loyal", "Calm"], description: "Mastiffs are good-natured, dignified dogs despite their massive size.", climate: "Cool to moderate climates", issues: ["Drools heavily", "Short lifespan", "Space needs"], stats: {energy: 40, trainability: 65, grooming: 40, social: 80, affection: 85, shedding: 55}},
+            {name: "Basset Hound", type: "Dog", size: "Medium", emoji: "🐕", image: null, traits: ["Gentle", "Patient", "Friendly"], description: "Basset Hounds are charming, low-key companions with excellent scenting ability.", climate: "Moderate climates", issues: ["Prone to howling", "Can be stubborn", "Weight gain"], stats: {energy: 40, trainability: 50, grooming: 45, social: 85, affection: 85, shedding: 60}},
+            {name: "Doberman Pinscher", type: "Dog", size: "Large", emoji: "🐕‍🦺", image: null, traits: ["Loyal", "Alert", "Intelligent"], description: "Doberman Pinschers are sleek, powerful guardian dogs and companions.", climate: "Moderate climates", issues: ["Needs socialization", "Firm training needed", "Separation anxiety"], stats: {energy: 80, trainability: 90, grooming: 35, social: 75, affection: 80, shedding: 50}},
+            {name: "Newfoundland", type: "Dog", size: "Large", emoji: "🐕‍🦺", image: null, traits: ["Gentle", "Patient", "Loyal"], description: "Newfoundlands are sweet, patient dogs known as nature's babysitters.", climate: "Cool climates", issues: ["Heavy drooling", "Massive shedding", "Shorter lifespan"], stats: {energy: 50, trainability: 80, grooming: 90, social: 95, affection: 100, shedding: 85}},
+            {name: "Bernese Mountain Dog", type: "Dog", size: "Large", emoji: "🐕‍🦺", image: null, traits: ["Gentle", "Patient", "Friendly"], description: "Bernese Mountain Dogs are good-natured with beautiful tri-colored coats.", climate: "Cool climates", issues: ["Short lifespan", "Prone to cancer", "Heavy shedding"], stats: {energy: 60, trainability: 75, grooming: 85, social: 90, affection: 95, shedding: 80}},
+            {name: "Weimaraner", type: "Dog", size: "Large", emoji: "🐕‍🦺", image: null, traits: ["Energetic", "Alert", "Loyal"], description: "Weimaraners are hunting dogs known for their distinctive gray coat.", climate: "Moderate climates", issues: ["Separation anxiety", "High exercise needs", "Can be destructive"], stats: {energy: 85, trainability: 85, grooming: 35, social: 80, affection: 75, shedding: 45}},
+            {name: "Brittany", type: "Dog", size: "Medium", emoji: "🐕‍🦺", image: null, traits: ["Energetic", "Intelligent", "Friendly"], description: "Brittanys are athletic sporting dogs that excel in the field.", climate: "Moderate climates", issues: ["High energy needs", "Can be sensitive", "Needs stimulation"], stats: {energy: 85, trainability: 85, grooming: 60, social: 85, affection: 85, shedding: 65}},
+            {name: "Cavalier King Charles Spaniel", type: "Dog", size: "Small", emoji: "🐕", image: null, traits: ["Affectionate", "Gentle", "Friendly"], description: "Cavaliers are affectionate, gentle, and graceful companion dogs.", climate: "Moderate climates", issues: ["Heart problems", "Can be clingy", "Separation anxiety"], stats: {energy: 60, trainability: 75, grooming: 70, social: 95, affection: 100, shedding: 60}},
+            {name: "Vizsla", type: "Dog", size: "Medium", emoji: "🐕‍🦺", image: null, traits: ["Affectionate", "Energetic", "Gentle"], description: "Vizslas are energetic sporting dogs that form tight bonds with owners.", climate: "Moderate climates", issues: ["Separation anxiety", "High exercise needs", "Can be destructive"], stats: {energy: 90, trainability: 80, grooming: 30, social: 85, affection: 95, shedding: 40}},
+            {name: "Collie", type: "Dog", size: "Large", emoji: "🐕‍🦺", image: null, traits: ["Loyal", "Intelligent", "Gentle"], description: "Collies are devoted, intelligent family companions famous from Lassie.", climate: "Cool to moderate climates", issues: ["Sensitive to noise", "Excessive barking", "Herding instincts"], stats: {energy: 70, trainability: 90, grooming: 85, social: 90, affection: 90, shedding: 80}},
+            {name: "Bloodhound", type: "Dog", size: "Large", emoji: "🐕‍🦺", image: null, traits: ["Gentle", "Patient", "Alert"], description: "Bloodhounds have the keenest sense of smell of any dog breed.", climate: "Moderate climates", issues: ["Drools heavily", "Can be stubborn", "Follows scents"], stats: {energy: 70, trainability: 55, grooming: 45, social: 80, affection: 70, shedding: 60}},
+            {name: "Labradoodle", type: "Dog", size: "Medium", emoji: "🐩", image: null, traits: ["Friendly", "Intelligent", "Energetic"], description: "Labradoodles combine the Lab's friendly nature with the Poodle's coat.", climate: "Adaptable to most climates", issues: ["Unpredictable coat", "High grooming needs", "Mixed traits"], stats: {energy: 85, trainability: 85, grooming: 80, social: 90, affection: 95, shedding: 25}},
+            
+            // Cats (32)
+            {name: "Maine Coon", type: "Cat", size: "Large", emoji: "🐱", image: null, traits: ["Gentle", "Friendly", "Intelligent"], description: "Maine Coons are gentle giants with dog-like personalities.", climate: "Cool to moderate climates", issues: ["Hip dysplasia", "Regular grooming", "Can be vocal"], stats: {energy: 60, trainability: 70, grooming: 80, social: 85, affection: 90, shedding: 75}},
+            {name: "Persian", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Gentle", "Calm", "Patient"], description: "Persians are gentle cats with long, luxurious coats.", climate: "Cool to moderate climates", issues: ["Daily grooming", "Eye discharge", "Breathing problems"], stats: {energy: 30, trainability: 40, grooming: 95, social: 70, affection: 85, shedding: 90}},
+            {name: "Siamese", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Vocal", "Intelligent", "Social"], description: "Siamese cats are highly vocal and love to 'talk' with their owners.", climate: "Warm climates", issues: ["Very vocal", "Can be demanding", "Separation anxiety"], stats: {energy: 80, trainability: 85, grooming: 40, social: 95, affection: 90, shedding: 50}},
+            {name: "British Shorthair", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Calm", "Gentle", "Patient"], description: "British Shorthairs are calm, dignified cats with plush coats.", climate: "Cool to moderate climates", issues: ["Weight gain", "Can be aloof", "Less active"], stats: {energy: 40, trainability: 50, grooming: 60, social: 75, affection: 80, shedding: 65}},
+            {name: "Ragdoll", type: "Cat", size: "Large", emoji: "🐱", image: null, traits: ["Gentle", "Affectionate", "Calm"], description: "Ragdolls are known for going limp when picked up.", climate: "Moderate climates", issues: ["Too trusting", "Kidney problems", "Low pain tolerance"], stats: {energy: 35, trainability: 60, grooming: 75, social: 85, affection: 100, shedding: 70}},
+            {name: "Russian Blue", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Gentle", "Intelligent", "Loyal"], description: "Russian Blues are quiet cats with stunning blue-gray coats.", climate: "Cool climates", issues: ["Shy with strangers", "Finicky eaters", "Needs routine"], stats: {energy: 50, trainability: 75, grooming: 45, social: 60, affection: 80, shedding: 40}},
+            {name: "Scottish Fold", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Gentle", "Calm", "Playful"], description: "Scottish Folds are known for their unique folded ears.", climate: "Moderate climates", issues: ["Ear problems", "Joint issues", "Sensitive handling"], stats: {energy: 55, trainability: 65, grooming: 50, social: 80, affection: 85, shedding: 55}},
+            {name: "Abyssinian", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Active", "Intelligent", "Playful"], description: "Abyssinians are active cats that love to explore and climb.", climate: "Warm climates", issues: ["Very active", "Can be aloof", "Kidney problems"], stats: {energy: 90, trainability: 80, grooming: 40, social: 85, affection: 75, shedding: 45}},
+            {name: "Bengal", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Active", "Playful", "Energetic"], description: "Bengals have wild-looking spotted coats and athletic builds.", climate: "Warm climates", issues: ["Very high energy", "Can be aggressive", "Steals objects"], stats: {energy: 95, trainability: 75, grooming: 35, social: 80, affection: 70, shedding: 50}},
+            {name: "Sphynx", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Energetic", "Social", "Affectionate"], description: "Sphynx cats are hairless and love being the center of attention.", climate: "Warm climates", issues: ["Needs sunscreen", "Gets cold easily", "Skin care"], stats: {energy: 85, trainability: 70, grooming: 20, social: 95, affection: 95, shedding: 0}},
+            {name: "Norwegian Forest Cat", type: "Cat", size: "Large", emoji: "🐱", image: null, traits: ["Gentle", "Patient", "Friendly"], description: "Norwegian Forest Cats have long, water-resistant coats.", climate: "Cold climates", issues: ["Heavy shedding", "Hip dysplasia", "Can be independent"], stats: {energy: 65, trainability: 60, grooming: 85, social: 75, affection: 80, shedding: 80}},
+            {name: "Oriental Shorthair", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Vocal", "Intelligent", "Active"], description: "Oriental Shorthairs are closely related to Siamese cats.", climate: "Warm climates", issues: ["Very vocal", "Can be demanding", "Separation anxiety"], stats: {energy: 75, trainability: 80, grooming: 35, social: 90, affection: 85, shedding: 45}},
+            {name: "American Shorthair", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Gentle", "Calm", "Friendly"], description: "American Shorthairs are easy-going family cats.", climate: "Adaptable to most climates", issues: ["Weight gain", "Can be lazy", "Less affectionate"], stats: {energy: 50, trainability: 55, grooming: 40, social: 80, affection: 75, shedding: 60}},
+            {name: "Birman", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Gentle", "Social", "Patient"], description: "Birmans have color-pointed coats with white gloves.", climate: "Moderate climates", issues: ["Regular grooming", "Can be possessive", "Kidney problems"], stats: {energy: 45, trainability: 65, grooming: 70, social: 85, affection: 90, shedding: 60}},
+            {name: "Turkish Angora", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Playful", "Intelligent", "Active"], description: "Turkish Angoras are graceful cats with silky coats.", climate: "Moderate climates", issues: ["Can be mischievous", "Deafness in whites", "Needs stimulation"], stats: {energy: 70, trainability: 75, grooming: 80, social: 80, affection: 85, shedding: 70}},
+            {name: "Burmese", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Affectionate", "Playful", "Social"], description: "Burmese cats are known for their dog-like devotion.", climate: "Warm climates", issues: ["Can be demanding", "Separation anxiety", "Follows everywhere"], stats: {energy: 65, trainability: 70, grooming: 35, social: 95, affection: 100, shedding: 40}},
+            {name: "Munchkin", type: "Cat", size: "Small", emoji: "🐱", image: null, traits: ["Playful", "Energetic", "Friendly"], description: "Munchkins are known for their short legs.", climate: "Moderate climates", issues: ["Spine problems", "Cannot jump high", "Controversial breeding"], stats: {energy: 75, trainability: 65, grooming: 50, social: 85, affection: 80, shedding: 55}},
+            {name: "Exotic Shorthair", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Gentle", "Calm", "Affectionate"], description: "Exotic Shorthairs have Persian features with short coats.", climate: "Cool to moderate climates", issues: ["Breathing problems", "Eye discharge", "Can be lazy"], stats: {energy: 35, trainability: 45, grooming: 50, social: 75, affection: 85, shedding: 60}},
+            {name: "Savannah", type: "Cat", size: "Large", emoji: "🐱", image: null, traits: ["Active", "Intelligent", "Alert"], description: "Savannahs are large hybrid cats with serval ancestry.", climate: "Warm climates", issues: ["Very high energy", "Can be destructive", "Pet conflicts"], stats: {energy: 95, trainability: 80, grooming: 30, social: 70, affection: 75, shedding: 45}},
+            {name: "Chartreux", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Gentle", "Calm", "Loyal"], description: "Chartreux cats have blue-gray coats and copper eyes.", climate: "Cool to moderate climates", issues: ["Can be shy", "Slow to mature", "May be territorial"], stats: {energy: 40, trainability: 60, grooming: 55, social: 70, affection: 85, shedding: 50}},
+            {name: "Tonkinese", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Social", "Playful", "Intelligent"], description: "Tonkinese cats are a cross between Siamese and Burmese.", climate: "Warm climates", issues: ["Can be vocal", "Needs attention", "Separation anxiety"], stats: {energy: 70, trainability: 80, grooming: 40, social: 90, affection: 90, shedding: 45}},
+            {name: "Japanese Bobtail", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Active", "Intelligent", "Social"], description: "Japanese Bobtails have short, bunny-like tails.", climate: "Moderate climates", issues: ["Very active", "Can be mischievous", "Needs stimulation"], stats: {energy: 80, trainability: 75, grooming: 45, social: 85, affection: 80, shedding: 50}},
+            {name: "Manx", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Playful", "Intelligent", "Loyal"], description: "Manx cats are known for being tailless.", climate: "Cool to moderate climates", issues: ["Spine problems", "Can be territorial", "Bowel issues"], stats: {energy: 70, trainability: 70, grooming: 50, social: 80, affection: 85, shedding: 55}},
+            {name: "Cornish Rex", type: "Cat", size: "Small", emoji: "🐱", image: null, traits: ["Active", "Playful", "Affectionate"], description: "Cornish Rex cats have distinctive curly coats.", climate: "Warm climates", issues: ["Gets cold easily", "Very active", "Food aggressive"], stats: {energy: 90, trainability: 75, grooming: 30, social: 90, affection: 90, shedding: 25}},
+            {name: "Devon Rex", type: "Cat", size: "Small", emoji: "🐱", image: null, traits: ["Playful", "Social", "Intelligent"], description: "Devon Rex cats have wavy coats and impish personalities.", climate: "Warm climates", issues: ["Gets cold easily", "Can be mischievous", "Skin problems"], stats: {energy: 85, trainability: 80, grooming: 35, social: 95, affection: 85, shedding: 30}},
+            {name: "Singapura", type: "Cat", size: "Small", emoji: "🐱", image: null, traits: ["Playful", "Affectionate", "Alert"], description: "Singapuras are one of the smallest cat breeds.", climate: "Warm climates", issues: ["Can be shy", "Needs warmth", "Fragile due to size"], stats: {energy: 75, trainability: 70, grooming: 35, social: 85, affection: 85, shedding: 40}},
+            {name: "Himalayan", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Gentle", "Calm", "Patient"], description: "Himalayans are a cross between Persians and Siamese.", climate: "Cool to moderate climates", issues: ["Daily grooming", "Breathing problems", "Eye discharge"], stats: {energy: 30, trainability: 50, grooming: 95, social: 75, affection: 85, shedding: 85}},
+            {name: "Bombay", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Affectionate", "Social", "Playful"], description: "Bombays are known as 'miniature black panthers'.", climate: "Warm climates", issues: ["Can be demanding", "Weight gain", "Follows everywhere"], stats: {energy: 60, trainability: 70, grooming: 35, social: 90, affection: 95, shedding: 45}},
+            {name: "LaPerm", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Gentle", "Affectionate", "Playful"], description: "LaPerms are known for their curly coats.", climate: "Moderate climates", issues: ["Special coat care", "Attention-seeking", "May be vocal"], stats: {energy: 55, trainability: 65, grooming: 60, social: 80, affection: 90, shedding: 40}},
+            {name: "Selkirk Rex", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Patient", "Calm", "Playful"], description: "Selkirk Rex cats have curly coats and tolerant natures.", climate: "Moderate climates", issues: ["Regular grooming", "Can be too laid-back", "Skin issues"], stats: {energy: 50, trainability: 60, grooming: 70, social: 85, affection: 85, shedding: 50}},
+            {name: "Ocicat", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Active", "Social", "Intelligent"], description: "Ocicats have wild-looking spotted coats but are domestic.", climate: "Moderate climates", issues: ["High energy needs", "Can be demanding", "Needs interaction"], stats: {energy: 80, trainability: 75, grooming: 35, social: 90, affection: 85, shedding: 50}},
+            {name: "Snowshoe", type: "Cat", size: "Medium", emoji: "🐱", image: null, traits: ["Gentle", "Social", "Intelligent"], description: "Snowshoe cats are known for their white feet and blue eyes.", climate: "Moderate climates", issues: ["Can be vocal", "Shy with strangers", "Needs interaction"], stats: {energy: 60, trainability: 70, grooming: 45, social: 85, affection: 80, shedding: 55}}
+        ];
+
+        let filtered = breeds;
+        let comparing = [];
+        let selectedBreed = null;
+
+        // Initialize the app
+        function init() {
+            populateBreedSelect();
+            setupEventListeners();
+            render();
+        }
+
+        function populateBreedSelect() {
+            const select = document.getElementById('breedSelect');
+            select.innerHTML = '<option value="">Select a breed...</option>';
+            
+            const sorted = [...breeds].sort((a, b) => a.name.localeCompare(b.name));
+            sorted.forEach(breed => {
+                const option = document.createElement('option');
+                option.value = breed.name;
+                option.textContent = `${breed.name} (${breed.type})`;
+                select.appendChild(option);
+            });
+        }
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', search);
+            document.getElementById('typeFilter').addEventListener('change', search);
+            document.getElementById('sizeFilter').addEventListener('change', search);
+            document.getElementById('sortFilter').addEventListener('change', search);
+            
+            document.getElementById('breedModal').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) closeModal();
+            });
+        }
+
+        function search() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+            const sizeFilter = document.getElementById('sizeFilter').value;
+            const sortFilter = document.getElementById('sortFilter').value;
+
+            filtered = breeds.filter(breed => {
+                const matchesSearch = breed.name.toLowerCase().includes(searchTerm) ||
+                                   breed.description.toLowerCase().includes(searchTerm) ||
+                                   breed.traits.some(trait => trait.toLowerCase().includes(searchTerm));
+                
+                const matchesType = !typeFilter || breed.type === typeFilter;
+                const matchesSize = !sizeFilter || breed.size === sizeFilter;
+                
+                return matchesSearch && matchesType && matchesSize;
+            });
+
+            if (sortFilter === 'name') {
+                filtered.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortFilter === 'energy') {
+                filtered.sort((a, b) => b.stats.energy - a.stats.energy);
+            } else if (sortFilter === 'affection') {
+                filtered.sort((a, b) => b.stats.affection - a.stats.affection);
+            }
+
+            render();
+        }
+
+        function render() {
+            const grid = document.getElementById('breedGrid');
+            const noResults = document.getElementById('noResults');
+
+            if (filtered.length === 0) {
+                grid.style.display = 'none';
+                noResults.style.display = 'block';
+                return;
+            }
+
+            grid.style.display = 'grid';
+            noResults.style.display = 'none';
+
+            grid.innerHTML = filtered.map(breed => createBreedCard(breed)).join('');
+        }
+
+        function createBreedCard(breed) {
+            const isComparing = comparing.includes(breed.name);
+            const traits = breed.traits.map(trait => `<span class="trait-tag">${trait}</span>`).join('');
+            
+            const imageContent = breed.image 
+                ? `<img src="${breed.image}" alt="${breed.name}">`
+                : breed.emoji;
+
+            return `
+                <div class="breed-card" onclick="showDetails('${breed.name}')">
+                    <div class="breed-image">${imageContent}</div>
+                    <div class="breed-info">
+                        <div class="breed-name">${breed.name}</div>
+                        <div class="breed-type">${breed.type} • ${breed.size}</div>
+                        <div class="breed-traits">${traits}</div>
+                        <div class="breed-description">${breed.description}</div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span>Energy</span>
+                                <div class="stat-bar">
+                                    <div class="stat-fill" style="width: ${breed.stats.energy}%"></div>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <span>Training</span>
+                                <div class="stat-bar">
+                                    <div class="stat-fill" style="width: ${breed.stats.trainability}%"></div>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <span>Grooming</span>
+                                <div class="stat-bar">
+                                    <div class="stat-fill" style="width: ${breed.stats.grooming}%"></div>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <span>Social</span>
+                                <div class="stat-bar">
+                                    <div class="stat-fill" style="width: ${breed.stats.social}%"></div>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <span>Affection</span>
+                                <div class="stat-bar">
+                                    <div class="stat-fill" style="width: ${breed.stats.affection}%"></div>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <span>Shedding</span>
+                                <div class="stat-bar">
+                                    <div class="stat-fill" style="width: ${breed.stats.shedding}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="compare-btn ${isComparing ? 'selected' : ''}" 
+                                onclick="event.stopPropagation(); toggleCompare('${breed.name}')">
+                            ${isComparing ? 'Remove from Compare' : 'Add to Compare'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showDetails(breedName) {
+            const breed = breeds.find(b => b.name === breedName);
+            if (!breed) return;
+
+            selectedBreed = breed;
+            
+            document.getElementById('modalEmoji').textContent = breed.emoji;
+            document.getElementById('modalTitle').textContent = breed.name;
+            document.getElementById('modalSubtitle').textContent = `${breed.type} • ${breed.size}`;
+            document.getElementById('modalDescription').textContent = breed.description;
+            document.getElementById('modalClimate').textContent = breed.climate;
+            
+            const traits = breed.traits.map(trait => 
+                `<span class="detail-trait-tag">${trait}</span>`
+            ).join('');
+            document.getElementById('modalTraits').innerHTML = traits;
+            
+            const issues = breed.issues.map(issue => 
+                `<span class="detail-trait-tag behavior-tag">${issue}</span>`
+            ).join('');
+            document.getElementById('modalIssues').innerHTML = issues;
+            
+            const stats = Object.entries(breed.stats).map(([key, value]) => `
+                <div class="detail-stat">
+                    <div class="stat-value">${value}%</div>
+                    <div>${key.charAt(0).toUpperCase() + key.slice(1)}</div>
+                </div>
+            `).join('');
+            document.getElementById('modalStats').innerHTML = stats;
+            
+            document.getElementById('breedModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('breedModal').classList.remove('active');
+        }
+
+        function toggleCompare(breedName) {
+            const index = comparing.indexOf(breedName);
+            
+            if (index > -1) {
+                comparing.splice(index, 1);
+            } else {
+                if (comparing.length >= 3) {
+                    alert('You can only compare up to 3 breeds!');
+                    return;
+                }
+                comparing.push(breedName);
+            }
+            
+            updateComparePanel();
+            render();
+        }
+
+        function updateComparePanel() {
+            const panel = document.getElementById('comparePanel');
+            const content = document.getElementById('compareContent');
+            const count = document.getElementById('compareCount');
+            
+            count.textContent = comparing.length;
+            
+            if (comparing.length === 0) {
+                panel.classList.remove('active');
+                return;
+            }
+            
+            panel.classList.add('active');
+            
+            content.innerHTML = comparing.map(breedName => {
+                const breed = breeds.find(b => b.name === breedName);
+                const traits = breed.traits.map(trait => `<span class="trait-tag">${trait}</span>`).join('');
+                
+                return `
+                    <div class="compare-item">
+                        <button class="remove-compare" onclick="toggleCompare('${breed.name}')">&times;</button>
+                        <div style="text-align: center; margin-bottom: 10px;">
+                            <div style="font-size: 2em;">${breed.emoji}</div>
+                            <div style="font-weight: bold;">${breed.name}</div>
+                            <div style="color: #667eea; font-size: 0.9em;">${breed.type} • ${breed.size}</div>
+                        </div>
+                        <div style="margin-bottom: 10px;">${traits}</div>
+                        <div class="stats-grid">
+                            ${Object.entries(breed.stats).map(([key, value]) => `
+                                <div class="stat-item">
+                                    <span>${key}</span>
+                                    <div class="stat-bar">
+                                        <div class="stat-fill" style="width: ${value}%"></div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function clearCompare() {
+            comparing = [];
+            updateComparePanel();
+            render();
+        }
+
+        function uploadImage() {
+            const fileInput = document.getElementById('imageUpload');
+            const breedSelect = document.getElementById('breedSelect');
+            
+            if (!fileInput.files[0]) {
+                showStatus('Please select an image file.', 'error');
+                return;
+            }
+            
+            if (!breedSelect.value) {
+                showStatus('Please select a breed.', 'error');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const breed = breeds.find(b => b.name === breedSelect.value);
+                if (breed) {
+                    breed.image = e.target.result;
+                    showStatus(`Image uploaded for ${breed.name}!`, 'success');
+                    fileInput.value = '';
+                    breedSelect.value = '';
+                    render();
+                }
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        function clearAllImages() {
+            breeds.forEach(breed => breed.image = null);
+            showStatus('All images cleared!', 'success');
+            render();
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('uploadStatus');
+            status.textContent = message;
+            status.className = `upload-status upload-${type}`;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        // Start the app
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
